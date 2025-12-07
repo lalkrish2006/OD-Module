@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $year = $_POST['year'] ?? null;
     $section = $_POST['section'] ?? null;
 
+    // Use DOB as password base
     $password = password_hash($dob, PASSWORD_DEFAULT);
 
     try {
@@ -48,6 +49,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'labtech': // Lab Technician
                 $stmt = $conn->prepare("INSERT INTO lab_technicians (register_no, name, password, department) VALUES (?, ?, ?, ?)");
                 $stmt->bind_param("ssss", $register_no, $name, $password, $department);
+                break;
+
+            case 'admin': // ✅ NEW ROLE
+                $stmt = $conn->prepare("INSERT INTO admin_users (register_no, password, department) VALUES (?, ?, ?)");
+                $stmt->bind_param("sss", $register_no, $password, $department);
                 break;
 
             default:
@@ -92,6 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
     <div class="container">
+        
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
                 <div class="card p-4">
@@ -113,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="principal">Principal</option>
                                 <option value="ja">Junior Assistant</option>
                                 <option value="labtech">Lab Technician</option>
+                                <option value="admin">Admin</option> <!-- ✅ NEW ROLE -->
                             </select>
                         </div>
 
@@ -173,40 +181,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Signup</button>
+                            <a href="http://localhost/OD-Module/loginin.php" class=" mt-2 btn btn-outline-secondary">
+                                 Login
+                            </a>
                         </div>
                     </form>
 
                 </div>
             </div>
         </div>
+        
     </div>
+   
+
 
     <script>
         function toggleFields(role) {
-            // Hide all first
             document.querySelectorAll('.role-field').forEach(el => el.classList.add('d-none'));
 
-            if (role === 'student') {
+            if (['student', 'mentor', 'ca'].includes(role)) {
                 document.querySelectorAll('.register-field, .common-field, .department-field, .year-field, .section-field')
                     .forEach(el => el.classList.remove('d-none'));
-            } else if (role === 'mentor' || role === 'ca') {
-                document.querySelectorAll('.register-field, .common-field, .department-field, .year-field, .section-field')
-                    .forEach(el => el.classList.remove('d-none'));
-            } else if (role === 'hod') {
+            } else if (['hod', 'ja', 'labtech', 'admin'].includes(role)) { // ✅ Admin added here
                 document.querySelectorAll('.register-field, .common-field, .department-field')
                     .forEach(el => el.classList.remove('d-none'));
             } else if (role === 'principal') {
                 document.querySelectorAll('.register-field, .common-field')
                     .forEach(el => el.classList.remove('d-none'));
-            } else if (role === 'ja') {
-                document.querySelectorAll('.register-field, .common-field, .department-field')
-                    .forEach(el => el.classList.remove('d-none'));
-            } else if (role === 'labtech') {
-                document.querySelectorAll('.register-field, .common-field, .department-field')
-                    .forEach(el => el.classList.remove('d-none'));
             }
         }
     </script>
 </body>
-
 </html>

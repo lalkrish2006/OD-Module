@@ -173,7 +173,7 @@ function get_status_badge_class_student($displayStatus) {
                     <i class="bi bi-person-fill-gear me-2"></i> Student OD Dashboard
                 </h3>
                 <div class="d-flex align-items-center gap-3">
-                    <a href="studentOdForm.html" class="btn btn-primary fw-bold shadow-sm rounded-pill">
+                    <a href="StudentOdForm.html" class="btn btn-primary fw-bold shadow-sm rounded-pill">
                         <i class="bi bi-plus-circle me-1"></i> New Request
                     </a>
                     <a href="logout.php" class="btn btn-outline-danger rounded-pill">

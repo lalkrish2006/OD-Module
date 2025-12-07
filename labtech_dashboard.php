@@ -228,4 +228,4 @@ document.querySelectorAll('.view-team-btn').forEach(btn=>{
 });
 </script>
 </body>
-</html>
+</html> 

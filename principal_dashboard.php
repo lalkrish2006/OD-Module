@@ -6,7 +6,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'principal') {
   exit;
 }
 
-$principalName = $_SESSION['user']['name']; // Display principal name
+$principalName = $_SESSION['user']['name']; // Principal name
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -14,18 +14,36 @@ try {
   $conn = new mysqli('localhost', 'root', '', 'college_db');
   $conn->set_charset('utf8mb4');
 
-  // Fetch OD Applications approved by HOD and requested bonafide
+  // ✅ Handle Accept / Reject actions
+  if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['od_id'])) {
+    $od_id = intval($_POST['od_id']);
+    $action = $_POST['action'];
+    if ($action === 'accept') {
+      $newStatus = 'Principal Accepted';
+    } elseif ($action === 'reject') {
+      $newStatus = 'Principal Rejected';
+    }
+
+    $updateSql = "UPDATE od_applications SET status = ? WHERE id = ?";
+    $stmt = $conn->prepare($updateSql);
+    $stmt->bind_param("si", $newStatus, $od_id);
+    $stmt->execute();
+    $stmt->close();
+  }
+
+  // ✅ Fetch OD Applications approved by HOD and requested bonafide or already acted by Principal
   $sql = "SELECT DISTINCT o.* 
-            FROM od_applications o
-            LEFT JOIN od_team_members t ON o.id = t.od_id
-            WHERE o.status = 'HOD Accepted' AND o.request_bonafide=1
-            ORDER BY o.id DESC";
+          FROM od_applications o
+          LEFT JOIN od_team_members t ON o.id = t.od_id
+          WHERE (o.status = 'HOD Accepted' OR o.status = 'Principal Accepted' OR o.status = 'Principal Rejected')
+          AND o.od_type = 'external'
+          ORDER BY o.id DESC";
   $stmt = $conn->prepare($sql);
   $stmt->execute();
   $applications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
   $stmt->close();
 
-  // Fetch team members for each OD
+  // ✅ Fetch team members for each OD
   $teamData = [];
   foreach ($applications as $app) {
     $od_id = $app['id'];
@@ -36,6 +54,7 @@ try {
     $teamData[$od_id] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
   }
+
 } catch (mysqli_sql_exception $e) {
   http_response_code(500);
   die("Database error: " . htmlspecialchars($e->getMessage()));
@@ -47,7 +66,6 @@ try {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <title>Principal Dashboard</title>
@@ -57,25 +75,35 @@ try {
       text-align: center;
       vertical-align: middle;
     }
-
     .table tbody td {
       vertical-align: middle;
     }
-
     .badge {
       font-size: 0.85rem;
     }
-
     .table-success {
       background-color: #d1e7dd !important;
       font-weight: 600;
+    }
+    .btn-accept {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+    .btn-reject {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
     }
   </style>
 </head>
 
 <body>
   <div class="container py-4">
-
     <div class="p-3">
       <a href="logout.php" class="btn btn-outline-danger">🔒 Logout</a>
     </div>
@@ -84,7 +112,7 @@ try {
     <h5 class="mb-4 text-center">Logged in as: <span class="text-success"><?= htmlspecialchars($principalName) ?></span></h5>
 
     <?php if (empty($applications)): ?>
-      <div class="alert alert-info">No OD requests available for Principal review.</div>
+      <div class="alert alert-info text-center">No OD requests available for Principal review.</div>
     <?php else: ?>
       <div class="table-responsive shadow-sm rounded">
         <table class="table table-bordered table-striped table-hover align-middle text-center">
@@ -103,6 +131,7 @@ try {
               <th>Status</th>
               <th>Bonafide</th>
               <th>Team Members</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -135,7 +164,15 @@ try {
                     -
                   <?php endif; ?>
                 </td>
-                <td><span class="badge bg-success">HOD Accepted</span></td>
+                <td>
+                  <?php if ($app['status'] === 'Principal Accepted'): ?>
+                    <span class="badge bg-success">Principal Accepted</span>
+                  <?php elseif ($app['status'] === 'Principal Rejected'): ?>
+                    <span class="badge bg-danger">Principal Rejected</span>
+                  <?php else: ?>
+                    <span class="badge bg-warning text-dark">HOD Accepted</span>
+                  <?php endif; ?>
+                </td>
                 <td><span class="badge bg-info">Verified ✅</span></td>
                 <td>
                   <?php if (!empty($teamData[$app['id']])): ?>
@@ -148,13 +185,23 @@ try {
                     <span class="text-muted">No team</span>
                   <?php endif; ?>
                 </td>
+                <td>
+                  <?php if ($app['status'] === 'Principal Accepted' || $app['status'] === 'Principal Rejected'): ?>
+                    <span class="text-muted"><?= htmlspecialchars($app['status']) ?></span>
+                  <?php else: ?>
+                    <form method="POST" class="principal-action-form" style="display:inline;">
+                      <input type="hidden" name="od_id" value="<?= $app['id'] ?>">
+                      <button type="submit" name="action" value="accept" class="btn-accept">Accept</button>
+                      <button type="submit" name="action" value="reject" class="btn-reject">Reject</button>
+                    </form>
+                  <?php endif; ?>
+                </td>
               </tr>
             <?php endforeach; ?>
           </tbody>
         </table>
       </div>
     <?php endif; ?>
-
   </div>
 
   <!-- Team Members Modal -->
@@ -172,6 +219,7 @@ try {
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // ✅ Team modal display
     document.querySelectorAll('.view-team-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const teamData = JSON.parse(btn.dataset.team);
@@ -204,7 +252,17 @@ try {
         document.getElementById("teamModalBody").innerHTML = tableHtml;
       });
     });
+
+    // ✅ Confirm before submitting Accept/Reject
+    document.querySelectorAll('.principal-action-form').forEach(form => {
+      form.addEventListener('submit', function (e) {
+        const action = e.submitter.value === 'accept' ? 'Accept' : 'Reject';
+        const confirmMsg = `Are you sure you want to ${action} this OD application?`;
+        if (!confirm(confirmMsg)) {
+          e.preventDefault(); // Cancel submission
+        }
+      });
+    });
   </script>
 </body>
-
 </html>

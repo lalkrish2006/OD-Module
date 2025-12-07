@@ -27,8 +27,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $roleTableMap = [
-        "Student" => "student",
-        "Mentor"  => "mentor",
+        "Student" => "students",
+        "Mentor"  => "mentors",
         "HOD"     => "hod"
     ];
 

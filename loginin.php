@@ -2,6 +2,53 @@
 session_start();
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
+// --- START SESSION MANAGEMENT: Prevent logged-in users from seeing the login form ---
+
+if (isset($_SESSION['role']) && isset($_SESSION['register_no'])) {
+    // Determine the redirection based on the stored role
+    $role = $_SESSION['role'];
+    switch ($role) {
+        case 'student':
+            header("Location: student_dashboard.php");
+            break;
+        case 'mentor':
+            header("Location: mentor_dashboard.php");
+            break;
+        case 'hod':
+        case 'admin':
+            header("Location: hod_dashboard.php");
+            break;
+        case 'ca':
+            header("Location: ca_dashboard.php");
+            break;
+        case 'ja':
+            header("Location: ja_dashboard.php");
+            break;
+        case 'principal':
+            header("Location: principal_dashboard.php");
+            break;
+        case 'labtech':
+            header("Location: labtech_dashboard.php");
+            break;
+        default:
+            // If role is set but leads nowhere, clear session and proceed to login form
+            session_unset();
+            session_destroy();
+    }
+    // Only exit if a redirection happened
+    if (in_array($role, ['student', 'mentor', 'hod', 'admin', 'ca', 'ja', 'principal', 'labtech'])) {
+        exit;
+    }
+}
+
+// Add anti-caching headers to prevent back button issues after logout/login
+header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1.
+header("Pragma: no-cache"); // HTTP 1.0.
+header("Expires: 0"); // Proxies.
+
+// --- END SESSION MANAGEMENT ---
+
+
 try {
     $conn = new mysqli('localhost', 'root', '', 'college_db');
     $conn->set_charset('utf8mb4');
@@ -19,7 +66,8 @@ try {
             "ja" => "jas",
             "hod" => "hods",
             "principal" => "principals",
-            "labtech" => "lab_technicians" // added Lab Technician
+            "labtech" => "lab_technicians",
+            "admin" => "admin_users"
         ];
 
         if (!isset($tables[$role])) {
@@ -36,13 +84,23 @@ try {
             if ($result->num_rows === 1) {
                 $user = $result->fetch_assoc();
 
-                // verify password (DOB stored as hash)
+                // Verify password
                 if (password_verify($password, $user['password'])) {
+                    
+                    // --- SET SESSION VARIABLES ---
                     $_SESSION['user'] = $user;
                     $_SESSION['role'] = $role;
-                    $_SESSION['register_no'] = $user['register_no'];  // useful for dashboards
+                    $_SESSION['register_no'] = $user['register_no'];
+                    // If the user table has name, department, etc., fetch them
+                    if (isset($user['name'])) {
+                        $_SESSION['name'] = $user['name'];
+                    }
+                    if (isset($user['department'])) {
+                        $_SESSION['department'] = $user['department'];
+                    }
+                    // --- END SESSION VARIABLES ---
 
-                    // ✅ Redirect based on role
+                    // Role-based redirection
                     switch ($role) {
                         case 'student':
                             header("Location: student_dashboard.php");
@@ -62,11 +120,15 @@ try {
                         case 'principal':
                             header("Location: principal_dashboard.php");
                             break;
-                        case 'labtech':  // Lab Technician dashboard
+                        case 'labtech':
                             header("Location: labtech_dashboard.php");
                             break;
+                        case 'admin':
+                            // Assuming admin also goes to hod dashboard (or a dedicated admin_dashboard.php)
+                            header("Location: hod_dashboard.php"); 
+                            break;
                         default:
-                            header("Location: login.php?error=invalid_role");
+                            header("Location: loginin.php?error=invalid_role");
                     }
                     exit;
                 } else {
@@ -87,15 +149,19 @@ try {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Page</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #007bff, #6610f2);
-            height: 100vh;
+            /* NEW CONTRASTED BACKGROUND */
+            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            
+            min-height: 100vh; 
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 0.5rem; 
         }
 
         .card {
@@ -107,18 +173,33 @@ try {
             border-radius: 30px;
             padding: 10px 20px;
         }
+        .footer {
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6); /* Light, semi-transparent text */
+            padding-top: 20px; /* Add some space above the footer */
+            margin-top: auto; 
+           
+            /* This is what pushes it to the bottom */
+        }
+        .footer h6{
+            color: white;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
+        
         <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
+            <div class="col-11 col-sm-10 col-md-6 col-lg-5">
+                <img src="https://www.ritrjpm.ac.in/images/rit-logo-wide-1.png" style="margin-bottom: 20px; width: 100%; height: auto;">
                 <?php if (isset($_GET['msg']) && $_GET['msg'] === 'loggedout'): ?>
-                <div class="alert alert-success text-center">
-                    ✅ You have been logged out successfully.
-                </div>
+                    <div class="alert alert-success text-center">
+                        ✅ You have been logged out successfully.
+                    </div>
                 <?php endif; ?>
+                <h3 class="text-center text-white mb-4">On - Duty Management System</h3>
                 <div class="card p-4">
                     <h3 class="text-center text-primary mb-3">Login</h3>
 
@@ -137,6 +218,7 @@ try {
                                 <option value="hod">HOD</option>
                                 <option value="principal">Principal</option>
                                 <option value="labtech">Lab Technician</option>
+                                <option value="admin">Admin</option> 
                             </select>
                         </div>
 
@@ -152,11 +234,23 @@ try {
 
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Login</button>
+                            <a href="http://localhost/OD-Module/sign_up.php" class=" mt-2 btn btn-outline-secondary border-color-blue">
+                                Signup
+                            </a>
                         </div>
                     </form>
-
+                    
+                    <div class="text-center mt-3">
+                        <a href="forgot_password.php" class="text-decoration-none">
+                           Forget Password
+                        </a>
+                    </div>
+                    
                 </div>
             </div>
+        </div>
+        <div class="footer">
+            <h6>💻 A Product From  Computer Science Engineering Student 💻</h6>
         </div>
     </div>
 </body>
