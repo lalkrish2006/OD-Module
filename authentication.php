@@ -1,16 +1,18 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 include("connection.php");
 
 // Custom error logger
-function log_error($message) {
+function log_error($message)
+{
     $timestamp = date("Y-m-d H:i:s");
     $log_file = __DIR__ . "/php_error.log";
     error_log("[$timestamp] $message\n", 3, $log_file);
 }
 
 // Sanitize input helper
-function cleanInput($data) {
+function cleanInput($data)
+{
     return htmlspecialchars(stripslashes(trim($data)));
 }
 
@@ -28,8 +30,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $roleTableMap = [
         "Student" => "students",
-        "Mentor"  => "mentors",
-        "HOD"     => "hod"
+        "Mentor" => "mentors",
+        "HOD" => "hod"
     ];
 
     if (!array_key_exists($role, $roleTableMap)) {
@@ -102,4 +104,3 @@ if (isset($_GET['msg']) && $_GET['msg'] === 'loggedout') {
     echo "<h3 style='color:green; text-align:center;'>You have been logged out successfully.</h3>";
 }
 ?>
-

@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
@@ -12,36 +12,36 @@ try {
     $conn->set_charset('utf8mb4');
 
     // --- Student Info ---
-    $register_no  = $_POST['registerNo'] ?? '';
+    $register_no = $_POST['registerNo'] ?? '';
     $student_name = $_POST['studentName'] ?? '';
-    $year         = $_POST['year'] ?? '';
-    $department   = $_POST['department'] ?? '';
-    $section      = $_POST['section'] ?? '';
-    $mentor       = $_POST['mentor'] ?? '';
-    $purpose      = $_POST['purpose'] ?? '';
-    $od_type      = $_POST['odType'] ?? '';
+    $year = $_POST['year'] ?? '';
+    $department = $_POST['department'] ?? '';
+    $section = $_POST['section'] ?? '';
+    $mentor = $_POST['mentor'] ?? '';
+    $purpose = $_POST['purpose'] ?? '';
+    $od_type = $_POST['odType'] ?? '';
 
     // --- Duration flags ---
-    $full_day    = isset($_POST['fullDay']);
-    $periodwise  = isset($_POST['periodwise']);
-    $many_day    = isset($_POST['daywise']);
+    $full_day = isset($_POST['fullDay']);
+    $periodwise = isset($_POST['periodwise']);
+    $many_day = isset($_POST['daywise']);
 
-    $od_date    = $_POST['od_date'] ?? null;
-    $from_time  = $_POST['from_time'] ?? null;
-    $to_time    = $_POST['to_time'] ?? null;
-    $from_date  = $_POST['from_date'] ?? null;
-    $to_date    = $_POST['to_date'] ?? null;
+    $od_date = $_POST['od_date'] ?? null;
+    $from_time = $_POST['from_time'] ?? null;
+    $to_time = $_POST['to_time'] ?? null;
+    $from_date = $_POST['from_date'] ?? null;
+    $to_date = $_POST['to_date'] ?? null;
 
     // --- External OD ---
     $from_date_ext = $_POST['from_date_ext'] ?? null;
-    $to_date_ext   = $_POST['to_date_ext'] ?? null;
-    $college_name  = $_POST['college_name'] ?? null;
-    $event_name    = $_POST['event_name'] ?? null;
+    $to_date_ext = $_POST['to_date_ext'] ?? null;
+    $college_name = $_POST['college_name'] ?? null;
+    $event_name = $_POST['event_name'] ?? null;
 
     // --- Lab & system access ---
-    $lab_required   = isset($_POST['labRequired']) ? 1 : 0;
+    $lab_required = isset($_POST['labRequired']) ? 1 : 0;
     $system_required = isset($_POST['systemRequired']) ? 1 : 0;
-    $lab_name       = ($lab_required && !empty($_POST['labName'])) ? $_POST['labName'] : null;
+    $lab_name = ($lab_required && !empty($_POST['labName'])) ? $_POST['labName'] : null;
 
     // --- Bonafide ---
     $request_bonafide = isset($_POST['request_bonafide']) ? 1 : 0;
@@ -57,7 +57,7 @@ try {
         }
     } elseif ($od_type === "external") {
         $from_date = $from_date_ext;
-        $to_date   = $to_date_ext;
+        $to_date = $to_date_ext;
     }
 
     // --- Insert into od_applications ---
@@ -123,11 +123,11 @@ try {
     require_once 'phpMailer.php';
 
     while (isset($_POST["member_name_$i"])) {
-        $m_name   = trim($_POST["member_name_$i"] ?? '');
-        $m_reg    = trim($_POST["member_regno_$i"] ?? '');
-        $m_year   = $_POST["member_year_$i"] ?? '';
-        $m_dept   = $_POST["member_department_$i"] ?? '';
-        $m_sec    = $_POST["member_section_$i"] ?? '';
+        $m_name = trim($_POST["member_name_$i"] ?? '');
+        $m_reg = trim($_POST["member_regno_$i"] ?? '');
+        $m_year = $_POST["member_year_$i"] ?? '';
+        $m_dept = $_POST["member_department_$i"] ?? '';
+        $m_sec = $_POST["member_section_$i"] ?? '';
         $m_mentor = $_POST["member_mentor_$i"] ?? '';
 
         if ($m_name && $m_reg) {

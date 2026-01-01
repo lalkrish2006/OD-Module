@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'student') {
@@ -49,14 +49,15 @@ try {
 }
 
 // Function to determine badge class based on status
-function get_status_badge_class_student($displayStatus) {
+function get_status_badge_class_student($displayStatus)
+{
     return match ($displayStatus) {
-        'pending'           => 'bg-warning text-dark',
+        'pending' => 'bg-warning text-dark',
         'mentor accepted',
-        'hod accepted'      => 'bg-success',
+        'hod accepted' => 'bg-success',
         'mentor rejected',
-        'hod rejected'      => 'bg-danger',
-        default             => 'bg-secondary'
+        'hod rejected' => 'bg-danger',
+        default => 'bg-secondary'
     };
 }
 ?>
@@ -126,7 +127,7 @@ function get_status_badge_class_student($displayStatus) {
             font-size: 0.88rem;
         }
 
-        .table-striped > tbody > tr:nth-of-type(odd) > * {
+        .table-striped>tbody>tr:nth-of-type(odd)>* {
             background-color: #fcfcfc;
         }
 
@@ -173,7 +174,7 @@ function get_status_badge_class_student($displayStatus) {
                     <i class="bi bi-person-fill-gear me-2"></i> Student OD Dashboard
                 </h3>
                 <div class="d-flex align-items-center gap-3">
-                    <a href="StudentOdForm.html" class="btn btn-primary fw-bold shadow-sm rounded-pill">
+                    <a href="student_od_apply.php" class="btn btn-primary fw-bold shadow-sm rounded-pill">
                         <i class="bi bi-plus-circle me-1"></i> New Request
                     </a>
                     <a href="logout.php" class="btn btn-outline-danger rounded-pill">
@@ -223,18 +224,19 @@ function get_status_badge_class_student($displayStatus) {
                                     <td class="text-center">
                                         <span class="badge bg-dark"><?= htmlspecialchars(ucfirst($app['od_type'])) ?></span>
                                     </td>
-                                    <td class="text-start text-truncate" style="max-width: 200px;" title="<?= htmlspecialchars($app['purpose']) ?>">
+                                    <td class="text-start text-truncate" style="max-width: 200px;"
+                                        title="<?= htmlspecialchars($app['purpose']) ?>">
                                         <?= htmlspecialchars($app['purpose']) ?>
                                     </td>
                                     <td class="text-center">
                                         <?php
-                                            if (!empty($app['from_date']) && !empty($app['to_date'])) {
-                                                echo date('M j', strtotime($app['from_date'])) . " → " . date('M j, Y', strtotime($app['to_date']));
-                                            } elseif (!empty($app['od_date'])) {
-                                                echo date('M j, Y', strtotime($app['od_date']));
-                                            } else {
-                                                echo "-";
-                                            }
+                                        if (!empty($app['from_date']) && !empty($app['to_date'])) {
+                                            echo date('M j', strtotime($app['from_date'])) . " → " . date('M j, Y', strtotime($app['to_date']));
+                                        } elseif (!empty($app['od_date'])) {
+                                            echo date('M j, Y', strtotime($app['od_date']));
+                                        } else {
+                                            echo "-";
+                                        }
                                         ?>
                                     </td>
                                     <td class="text-start">
@@ -250,30 +252,31 @@ function get_status_badge_class_student($displayStatus) {
                                     </td>
                                     <td class="text-center">
                                         <?php
-                                            $odStatus = strtolower(trim($app['status']));
-                                            $memberStatus = null;
-                                            $teamList = $teamData[$app['id']] ?? [];
-                                            foreach ($teamList as $member) {
-                                                if ($member['member_regno'] === $studentRegNo) {
-                                                    $memberStatus = strtolower(trim($member['mentor_status'] ?? ''));
-                                                    break;
-                                                }
+                                        $odStatus = strtolower(trim($app['status']));
+                                        $memberStatus = null;
+                                        $teamList = $teamData[$app['id']] ?? [];
+                                        foreach ($teamList as $member) {
+                                            if ($member['member_regno'] === $studentRegNo) {
+                                                $memberStatus = strtolower(trim($member['mentor_status'] ?? ''));
+                                                break;
                                             }
-                                            if ($odStatus === 'hod accepted' && $memberStatus === 'rejected') {
-                                                $displayStatus = 'mentor rejected';
-                                            } else {
-                                                $displayStatus = $odStatus;
-                                            }
-                                            $badgeClass = get_status_badge_class_student($displayStatus);
-                                            $displayStatusText = match ($displayStatus) {
-                                                'mentor accepted' => 'Mentor Approved',
-                                                'hod accepted' => 'Approved',
-                                                'mentor rejected' => 'Rejected (Mentor)',
-                                                'hod rejected' => 'Rejected (HOD)',
-                                                default => ucwords($displayStatus)
-                                            };
+                                        }
+                                        if ($odStatus === 'hod accepted' && $memberStatus === 'rejected') {
+                                            $displayStatus = 'mentor rejected';
+                                        } else {
+                                            $displayStatus = $odStatus;
+                                        }
+                                        $badgeClass = get_status_badge_class_student($displayStatus);
+                                        $displayStatusText = match ($displayStatus) {
+                                            'mentor accepted' => 'Mentor Approved',
+                                            'hod accepted' => 'Approved',
+                                            'mentor rejected' => 'Rejected (Mentor)',
+                                            'hod rejected' => 'Rejected (HOD)',
+                                            default => ucwords($displayStatus)
+                                        };
                                         ?>
-                                        <span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($displayStatusText) ?></span>
+                                        <span
+                                            class="badge <?= $badgeClass ?>"><?= htmlspecialchars($displayStatusText) ?></span>
                                     </td>
                                     <td class="text-center">
                                         <?php if ($app['request_bonafide'] == 1): ?>
@@ -285,12 +288,9 @@ function get_status_badge_class_student($displayStatus) {
                                     <td>
                                         <?php $teamListCount = count($teamData[$app['id']] ?? []); ?>
                                         <?php if (!empty($teamList)): ?>
-                                            <button
-                                                type="button"
-                                                class="btn btn-outline-primary view-team-btn"
+                                            <button type="button" class="btn btn-outline-primary view-team-btn"
                                                 data-team='<?= json_encode(array_values($teamData[$app['id']]), JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#teamModal">
+                                                data-bs-toggle="modal" data-bs-target="#teamModal">
                                                 <i class="bi bi-people-fill"></i> View (<?= $teamListCount ?>)
                                             </button>
                                         <?php else: ?>
@@ -310,8 +310,10 @@ function get_status_badge_class_student($displayStatus) {
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="teamModalLabel"><i class="bi bi-people me-2"></i> Team Members Details</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="teamModalLabel"><i class="bi bi-people me-2"></i> Team Members Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4" id="teamModalBody"></div>
             </div>
@@ -353,4 +355,5 @@ function get_status_badge_class_student($displayStatus) {
         });
     </script>
 </body>
+
 </html>

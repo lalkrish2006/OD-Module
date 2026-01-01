@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // --- START SESSION MANAGEMENT: Prevent logged-in users from seeing the login form ---
@@ -86,7 +86,7 @@ try {
 
                 // Verify password
                 if (password_verify($password, $user['password'])) {
-                    
+
                     // --- SET SESSION VARIABLES ---
                     $_SESSION['user'] = $user;
                     $_SESSION['role'] = $role;
@@ -125,7 +125,7 @@ try {
                             break;
                         case 'admin':
                             // Assuming admin also goes to hod dashboard (or a dedicated admin_dashboard.php)
-                            header("Location: hod_dashboard.php"); 
+                            header("Location: hod_dashboard.php");
                             break;
                         default:
                             header("Location: loginin.php?error=invalid_role");
@@ -156,12 +156,12 @@ try {
         body {
             /* NEW CONTRASTED BACKGROUND */
             background: linear-gradient(135deg, #2c3e50, #4ca1af);
-            
-            min-height: 100vh; 
+
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 0.5rem; 
+            padding: 0.5rem;
         }
 
         .card {
@@ -173,16 +173,20 @@ try {
             border-radius: 30px;
             padding: 10px 20px;
         }
+
         .footer {
             width: 100%;
             text-align: center;
-            color: rgba(255, 255, 255, 0.6); /* Light, semi-transparent text */
-            padding-top: 20px; /* Add some space above the footer */
-            margin-top: auto; 
-           
+            color: rgba(255, 255, 255, 0.6);
+            /* Light, semi-transparent text */
+            padding-top: 20px;
+            /* Add some space above the footer */
+            margin-top: auto;
+
             /* This is what pushes it to the bottom */
         }
-        .footer h6{
+
+        .footer h6 {
             color: white;
         }
     </style>
@@ -190,10 +194,11 @@ try {
 
 <body>
     <div class="container">
-        
+
         <div class="row justify-content-center">
             <div class="col-11 col-sm-10 col-md-6 col-lg-5">
-                <img src="https://www.ritrjpm.ac.in/images/rit-logo-wide-1.png" style="margin-bottom: 20px; width: 100%; height: auto;">
+                <img src="https://www.ritrjpm.ac.in/images/rit-logo-wide-1.png"
+                    style="margin-bottom: 20px; width: 100%; height: auto;">
                 <?php if (isset($_GET['msg']) && $_GET['msg'] === 'loggedout'): ?>
                     <div class="alert alert-success text-center">
                         ✅ You have been logged out successfully.
@@ -203,8 +208,10 @@ try {
                 <div class="card p-4">
                     <h3 class="text-center text-primary mb-3">Login</h3>
 
-                    <?php if (!empty($success)) echo "<div class='alert alert-success'>$success</div>"; ?>
-                    <?php if (!empty($error)) echo "<div class='alert alert-danger'>$error</div>"; ?>
+                    <?php if (!empty($success))
+                        echo "<div class='alert alert-success'>$success</div>"; ?>
+                    <?php if (!empty($error))
+                        echo "<div class='alert alert-danger'>$error</div>"; ?>
 
                     <form method="POST">
                         <div class="mb-3">
@@ -218,7 +225,7 @@ try {
                                 <option value="hod">HOD</option>
                                 <option value="principal">Principal</option>
                                 <option value="labtech">Lab Technician</option>
-                                <option value="admin">Admin</option> 
+                                <option value="admin">Admin</option>
                             </select>
                         </div>
 
@@ -234,25 +241,59 @@ try {
 
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Login</button>
-                            <a href="http://localhost/OD-Module/sign_up.php" class=" mt-2 btn btn-outline-secondary border-color-blue">
+                            <a href="http://localhost/OD-Module/sign_up.php"
+                                class=" mt-2 btn btn-outline-secondary border-color-blue">
                                 Signup
                             </a>
                         </div>
                     </form>
-                    
+
                     <div class="text-center mt-3">
                         <a href="forgot_password.php" class="text-decoration-none">
-                           Forget Password
+                            Forget Password
                         </a>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
         <div class="footer">
-            <h6>💻 A Product From  Computer Science Engineering Student 💻</h6>
+            <h6>💻 A Product From Computer Science Engineering Student 💻</h6>
         </div>
     </div>
+    <script>
+        document.querySelector('form').addEventListener('submit', function (e) {
+            const roleSelect = document.querySelector('select[name="role"]');
+            const role = roleSelect ? roleSelect.value : '';
+            const registerInput = document.querySelector('input[name="register_no"]');
+            const registerNo = registerInput ? registerInput.value : '';
+
+            // Remove existing client-side error if any
+            const existingError = document.getElementById('client-error-msg');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            if (role === 'student') {
+                const regex = /^9536\d{2}104\d{3}$/;
+                if (!regex.test(registerNo)) {
+                    e.preventDefault(); // Stop form submission
+
+                    // Create error alert
+                    const errorDiv = document.createElement('div');
+                    errorDiv.id = 'client-error-msg';
+                    errorDiv.className = 'alert alert-danger';
+                    errorDiv.innerText = 'Invalid Register Regex';
+
+                    // Insert before the form
+                    document.querySelector('form').insertAdjacentElement('beforebegin', errorDiv);
+
+                    // Scroll to top of card so user sees error
+                    document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

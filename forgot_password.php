@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Database connection setup (assuming connection.php exists or similar)
@@ -31,13 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // --- STEP 1: AUTHENTICATION (Using Name and Register No) ---
         $role = trim($_POST['role']);
         $register_no = trim($_POST['register_no']);
-        $name = trim($_POST['name']); 
-        
+        $name = trim($_POST['name']);
+
         if (!isset($tables[$role])) {
             $error = "❌ Invalid role selected!";
         } else {
             $table = $tables[$role];
-            
+
             // Query using Register Number and Name for verification
             $stmt = $conn->prepare("SELECT register_no FROM $table WHERE register_no = ? AND name = ?");
             $stmt->bind_param("ss", $register_no, $name);
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Authentication successful, proceed to step 2
                 $_SESSION['reset_reg_no'] = $register_no;
                 $_SESSION['reset_role_table'] = $table;
-                $step = 2; 
+                $step = 2;
             } else {
                 $error = "❌ Authentication failed. Check your Register Number and Full Name.";
                 $step = 1;
@@ -60,11 +60,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $confirm_password = $_POST['confirm_password'];
         $register_no = $_SESSION['reset_reg_no'] ?? null;
         $table = $_SESSION['reset_role_table'] ?? null;
-        
+
         // Validation for date format and match
         if (empty($new_password) || empty($confirm_password)) {
-             $error = "❌ Please select a date for the new password.";
-             $step = 2;
+            $error = "❌ Please select a date for the new password.";
+            $step = 2;
         } elseif ($new_password !== $confirm_password) {
             $error = "❌ New Date Password and Confirm Date Password do not match.";
             $step = 2;
@@ -100,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -108,18 +109,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <style>
         body {
             background: linear-gradient(135deg, #2c3e50, #4ca1af);
-            min-height: 100vh; 
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 0.5rem; 
+            padding: 0.5rem;
         }
+
         .card {
             border-radius: 20px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="row justify-content-center">
@@ -127,65 +130,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card p-4">
                     <h3 class="text-center text-danger mb-3">Forgot Password</h3>
 
-                    <?php if (!empty($success)) echo "<div class='alert alert-success'>$success</div>"; ?>
-                    <?php if (!empty($error)) echo "<div class='alert alert-danger'>$error</div>"; ?>
+                    <?php if (!empty($success))
+                        echo "<div class='alert alert-success'>$success</div>"; ?>
+                    <?php if (!empty($error))
+                        echo "<div class='alert alert-danger'>$error</div>"; ?>
 
                     <?php if ($step === 1): ?>
-                    <form method="POST">
-                        <input type="hidden" name="authenticate" value="1">
-                        <p class="text-center">Enter your role, register number, and **Full Name** to verify your identity.</p>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Role</label>
-                            <select class="form-select" name="role" required>
-                                <option value="" disabled selected>-- Select Role --</option>
-                                <option value="student">Student</option>
-                                <option value="mentor">Mentor</option>
-                                <option value="ca">Class Advisor</option>
-                                <option value="ja">Junior Assistant</option>
-                                <option value="hod">HOD</option>
-                                <option value="principal">Principal</option>
-                                <option value="labtech">Lab Technician</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Register Number</label>
-                            <input type="text" name="register_no" class="form-control" required>
-                        </div>
+                        <form method="POST">
+                            <input type="hidden" name="authenticate" value="1">
+                            <p class="text-center">Enter your role, register number, and **Full Name** to verify your
+                                identity.</p>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Full Name</label>
-                            <input type="text" name="name" class="form-control" required>
-                        </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Role</label>
+                                <select class="form-select" name="role" required>
+                                    <option value="" disabled selected>-- Select Role --</option>
+                                    <option value="student">Student</option>
+                                    <option value="mentor">Mentor</option>
+                                    <option value="ca">Class Advisor</option>
+                                    <option value="ja">Junior Assistant</option>
+                                    <option value="hod">HOD</option>
+                                    <option value="principal">Principal</option>
+                                    <option value="labtech">Lab Technician</option>
+                                </select>
+                            </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-warning">Verify Details</button>
-                        </div>
-                        <div class="text-center mt-3">
-                            <a href="loginin.php" class="text-decoration-none">Back to Login</a>
-                        </div>
-                    </form>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Register Number</label>
+                                <input type="text" name="register_no" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Full Name</label>
+                                <input type="text" name="name" class="form-control" required>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-warning">Verify Details</button>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="loginin.php" class="text-decoration-none">Back to Login</a>
+                            </div>
+                        </form>
 
                     <?php elseif ($step === 2): ?>
-                    <form method="POST">
-                        <input type="hidden" name="reset_password" value="1">
-                        <p class="text-center">Set your New password for Register No: **<?php echo htmlspecialchars($_SESSION['reset_reg_no']); ?>**</p>
+                        <form method="POST">
+                            <input type="hidden" name="reset_password" value="1">
+                            <p class="text-center">Set your New password for Register No:
+                                **<?php echo htmlspecialchars($_SESSION['reset_reg_no']); ?>**</p>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">New Password (Select Date)</label>
-                            <input type="date" name="new_password" class="form-control" required>
-                        </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">New Password (Select Date)</label>
+                                <input type="date" name="new_password" class="form-control" required>
+                            </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Confirm New Password (Select Date)</label>
-                            <input type="date" name="confirm_password" class="form-control" required>
-                        </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Confirm New Password (Select Date)</label>
+                                <input type="date" name="confirm_password" class="form-control" required>
+                            </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success">Reset Password</button>
-                        </div>
-                    </form>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">Reset Password</button>
+                            </div>
+                        </form>
                     <?php endif; ?>
 
                 </div>
@@ -193,4 +200,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </body>
+
 </html>

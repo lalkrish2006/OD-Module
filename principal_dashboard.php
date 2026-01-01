@@ -1,6 +1,6 @@
 <?php
 // Principal Dashboard
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'principal') {
   header("Location: login.php?error=unauthorized");
   exit;
@@ -66,6 +66,7 @@ try {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Principal Dashboard</title>
@@ -75,16 +76,20 @@ try {
       text-align: center;
       vertical-align: middle;
     }
+
     .table tbody td {
       vertical-align: middle;
     }
+
     .badge {
       font-size: 0.85rem;
     }
+
     .table-success {
       background-color: #d1e7dd !important;
       font-weight: 600;
     }
+
     .btn-accept {
       background-color: #28a745;
       color: white;
@@ -92,6 +97,7 @@ try {
       padding: 5px 10px;
       border-radius: 4px;
     }
+
     .btn-reject {
       background-color: #dc3545;
       color: white;
@@ -109,7 +115,8 @@ try {
     </div>
 
     <h2 class="mb-2 text-center text-danger fw-bold">Principal Dashboard</h2>
-    <h5 class="mb-4 text-center">Logged in as: <span class="text-success"><?= htmlspecialchars($principalName) ?></span></h5>
+    <h5 class="mb-4 text-center">Logged in as: <span class="text-success"><?= htmlspecialchars($principalName) ?></span>
+    </h5>
 
     <?php if (empty($applications)): ?>
       <div class="alert alert-info text-center">No OD requests available for Principal review.</div>
@@ -265,4 +272,5 @@ try {
     });
   </script>
 </body>
+
 </html>

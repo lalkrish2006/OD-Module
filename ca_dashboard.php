@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 
 // ✅ Only allow logged-in CA users
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'ca') {
@@ -20,7 +20,7 @@ try {
     $conn->set_charset('utf8mb4');
 
     // --- MODIFIED: Fetch OD Applications with Filters ---
-    
+
     $searchSql = "";
     $monthSql = "";
     $params = []; // Start with empty params
@@ -47,7 +47,7 @@ try {
         array_push($params, $like, $like, $like, $like, $like, $like, $like, $like, $like, $like, $like, $like);
         $types .= str_repeat('s', 12);
     }
-    
+
     // Add month filter if provided
     if (!empty($monthFilter)) {
         $monthSql = " AND DATE_FORMAT(o.from_date, '%Y-%m') = ?";
@@ -113,9 +113,10 @@ try {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
-            --primary-color: #0d6efd; 
+            --primary-color: #0d6efd;
             --danger-color: #dc3545;
-            --success-color: #198754; /* CA theme color */
+            --success-color: #198754;
+            /* CA theme color */
             --info-color: #0dcaf0;
             --secondary-color: #6c757d;
             --light-bg: #f8f9fa;
@@ -140,13 +141,15 @@ try {
         }
 
         .dashboard-header h2 {
-            color: var(--success-color); /* CA theme */
+            color: var(--success-color);
+            /* CA theme */
             font-weight: 700;
         }
-        
+
         .user-info {
             font-size: 0.9rem;
         }
+
         .user-info .fw-bold {
             color: var(--success-color);
         }
@@ -156,17 +159,19 @@ try {
             border-radius: 0.75rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
-        
+
         .filter-bar-card .form-label {
             font-size: 0.75rem;
             font-weight: 600;
             color: var(--secondary-color);
         }
+
         .filter-bar-card .form-control,
         .filter-bar-card .form-select {
             font-size: 0.9rem;
             border-radius: 6px;
         }
+
         .filter-bar-card .btn-sm {
             font-weight: 600;
             border-radius: 6px;
@@ -192,7 +197,8 @@ try {
         }
 
         .table thead th {
-            background: var(--success-color); /* CA theme */
+            background: var(--success-color);
+            /* CA theme */
             color: var(--white);
             font-size: 0.75rem;
             letter-spacing: 0.5px;
@@ -201,9 +207,10 @@ try {
         }
 
         .table-hover tbody tr:hover {
-            background-color: #f6fffb; /* Light green hover */
+            background-color: #f6fffb;
+            /* Light green hover */
         }
-        
+
         .table td.detail-group {
             text-align: left;
             white-space: normal;
@@ -217,25 +224,28 @@ try {
             font-weight: 600;
         }
 
-        .btn-sm, .btn-group-sm > .btn {
+        .btn-sm,
+        .btn-group-sm>.btn {
             font-size: 0.75rem;
             padding: 0.2rem 0.6rem;
             border-radius: 50rem;
             font-weight: 600;
         }
-        
+
         .modal-header {
-            background-color: var(--success-color); /* CA theme */
+            background-color: var(--success-color);
+            /* CA theme */
             color: white;
             border-bottom: none;
         }
-        
+
         .modal-content {
-             border-radius: 0.75rem;
-             border:none;
+            border-radius: 0.75rem;
+            border: none;
         }
-        
-        .table-sm th, .table-sm td {
+
+        .table-sm th,
+        .table-sm td {
             font-size: 0.8rem;
             padding: 0.5rem;
         }
@@ -244,12 +254,12 @@ try {
 
 <body>
     <div class="container-fluid py-4">
-        
+
         <header class="dashboard-header d-flex justify-content-between align-items-center">
             <h2 class="mb-0"><i class="bi bi-patch-check-fill me-2"></i> CA Dashboard</h2>
             <div class="d-flex align-items-center">
-                 <span class="text-secondary me-3 user-info">
-                    Logged in as: 
+                <span class="text-secondary me-3 user-info">
+                    Logged in as:
                     <span class="fw-bold text-dark"><?= htmlspecialchars($caName) ?></span>
                 </span>
                 <a href="logout.php" class="btn btn-outline-secondary btn-sm rounded-pill">
@@ -263,19 +273,20 @@ try {
                 <form method="GET" action="" class="row g-3 align-items-end">
                     <div class="col-md-7">
                         <label for="search" class="form-label">Search by ID, Name, Reg No, etc.</label>
-                        <input type="text" class="form-control form-control-sm" id="search" name="search" 
-                               placeholder="Enter student name, register number, purpose..." 
-                               value="<?= htmlspecialchars($search) ?>">
+                        <input type="text" class="form-control form-control-sm" id="search" name="search"
+                            placeholder="Enter student name, register number, purpose..."
+                            value="<?= htmlspecialchars($search) ?>">
                     </div>
                     <div class="col-md-3">
                         <label for="month" class="form-label">Filter by Month</label>
-                        <input type="month" class="form-control form-control-sm" id="month" name="month" 
-                               value="<?= htmlspecialchars($monthFilter) ?>">
+                        <input type="month" class="form-control form-control-sm" id="month" name="month"
+                            value="<?= htmlspecialchars($monthFilter) ?>">
                     </div>
                     <div class="col-md-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-funnel-fill me-1"></i> Filter</button>
+                        <button type="submit" class="btn btn-success btn-sm w-100"><i
+                                class="bi bi-funnel-fill me-1"></i> Filter</button>
                         <a href="?" class="btn btn-outline-secondary btn-sm w-100">
-                           <i class="bi bi-x-lg me-1"></i> Clear
+                            <i class="bi bi-x-lg me-1"></i> Clear
                         </a>
                     </div>
                 </form>
@@ -286,7 +297,7 @@ try {
                 <i class="bi bi-info-circle me-2"></i> No OD requests are currently available for review.
             </div>
         <?php elseif (empty($applications)): ?>
-             <div class="alert alert-warning shadow-sm">
+            <div class="alert alert-warning shadow-sm">
                 <i class="bi bi-search me-2"></i> No applications found matching your filter criteria.
             </div>
         <?php else: ?>
@@ -318,7 +329,8 @@ try {
                                     <td><?= htmlspecialchars($app['department']) ?></td>
                                     <td><?= htmlspecialchars($app['section']) ?></td>
                                     <td>
-                                        <span class="badge bg-<?= $app['od_type'] === 'Internal' ? 'info text-dark' : 'primary' ?>">
+                                        <span
+                                            class="badge bg-<?= $app['od_type'] === 'Internal' ? 'info text-dark' : 'primary' ?>">
                                             <?= htmlspecialchars(ucfirst($app['od_type'])) ?>
                                         </span>
                                     </td>
@@ -327,7 +339,7 @@ try {
                                         <?php if ($app['college_name']): ?>
                                             <div class="small text-muted">
                                                 <i class="bi bi-building me-1"></i>
-                                                <?= htmlspecialchars($app['college_name']) ?> 
+                                                <?= htmlspecialchars($app['college_name']) ?>
                                                 (<?= htmlspecialchars($app['event_name']) ?>)
                                             </div>
                                         <?php else: ?>
@@ -349,8 +361,10 @@ try {
                                         <?php
                                         $status = $app['status'];
                                         $badgeClass = 'secondary';
-                                        if ($status == 'Hod Accepted') $badgeClass = 'success';
-                                        elseif ($status == 'Principal Accepted') $badgeClass = 'primary';
+                                        if ($status == 'Hod Accepted')
+                                            $badgeClass = 'success';
+                                        elseif ($status == 'Principal Accepted')
+                                            $badgeClass = 'primary';
                                         ?>
                                         <span class="badge bg-<?= $badgeClass ?> status-badge">
                                             <?= htmlspecialchars($status) ?>
@@ -359,12 +373,9 @@ try {
                                     <td>
                                         <?php $teamList = $teamData[$app['id']] ?? []; ?>
                                         <?php if (!empty($teamList)): ?>
-                                            <button
-                                                type="button"
-                                                class="btn btn-outline-primary btn-sm view-team-btn"
+                                            <button type="button" class="btn btn-outline-primary btn-sm view-team-btn"
                                                 data-team='<?= json_encode(array_values($teamList), JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#teamModal">
+                                                data-bs-toggle="modal" data-bs-target="#teamModal">
                                                 👥 View Team (<?= count($teamList) ?>)
                                             </button>
                                         <?php else: ?>
@@ -383,7 +394,8 @@ try {
     <div class="modal fade" id="teamModal" tabindex="-1" aria-labelledby="teamModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header"> <h5 class="modal-title" id="teamModalLabel"><i class="bi bi-people-fill me-2"></i> Team Members</h5>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="teamModalLabel"><i class="bi bi-people-fill me-2"></i> Team Members</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="teamModalBody"></div>
@@ -415,7 +427,7 @@ try {
                 teamData.forEach(member => {
                     let badgeClass = "bg-secondary";
                     const status = member.mentor_status?.toLowerCase();
-                    
+
                     if (status === "accepted" || status === "hod accepted") badgeClass = "bg-success";
                     else if (status === "rejected" || status === "hod rejected") badgeClass = "bg-danger";
                     else if (status === "pending") badgeClass = "bg-warning text-dark";
@@ -439,4 +451,5 @@ try {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

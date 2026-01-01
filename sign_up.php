@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
@@ -98,14 +98,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
     <div class="container">
-        
+
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
                 <div class="card p-4">
                     <h3 class="mb-3 text-center text-primary">Signup</h3>
 
-                    <?php if (!empty($success)) echo "<div class='alert alert-success'>$success</div>"; ?>
-                    <?php if (!empty($error)) echo "<div class='alert alert-danger'>$error</div>"; ?>
+                    <?php if (!empty($success))
+                        echo "<div class='alert alert-success'>$success</div>"; ?>
+                    <?php if (!empty($error))
+                        echo "<div class='alert alert-danger'>$error</div>"; ?>
 
                     <form method="POST" id="signupForm">
                         <!-- Role Dropdown -->
@@ -182,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Signup</button>
                             <a href="http://localhost/OD-Module/loginin.php" class=" mt-2 btn btn-outline-secondary">
-                                 Login
+                                Login
                             </a>
                         </div>
                     </form>
@@ -190,9 +192,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
         </div>
-        
+
     </div>
-   
+
 
 
     <script>
@@ -212,4 +214,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 </body>
+
 </html>

@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 require_once 'db_connection.php';
 
 // Check if logged in as admin

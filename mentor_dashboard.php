@@ -1,6 +1,6 @@
 <?php
 // Mentor Dashboard
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'mentor') {
@@ -42,8 +42,10 @@ try {
         $hasAccepted = false;
         $hasRejected = false;
         foreach ($results as $r) {
-            if ($r['mentor_status'] === "Accepted") $hasAccepted = true;
-            if ($r['mentor_status'] === "Rejected") $hasRejected = true;
+            if ($r['mentor_status'] === "Accepted")
+                $hasAccepted = true;
+            if ($r['mentor_status'] === "Rejected")
+                $hasRejected = true;
         }
 
         // Get OD type to apply correct logic for final status
@@ -94,11 +96,11 @@ try {
             $stmt->fetch();
             $stmt->close();
         }
-        
-        $actionTaken = strtolower($status); 
+
+        $actionTaken = strtolower($status);
         $isTeam = ($teamCount > 1);
-        
-        if ( ($isTeam) || (!$isTeam && $actionTaken === 'accepted') ) {
+
+        if (($isTeam) || (!$isTeam && $actionTaken === 'accepted')) {
             $stmt = $conn->prepare(
                 "SELECT hods.email, hods.name FROM hods 
                  JOIN od_applications ON od_applications.department = hods.department 
@@ -119,7 +121,7 @@ try {
 
             if ($hodEmail && $mentorEmail) {
                 require_once 'phpMailer.php';
-                
+
                 $subject = "";
                 $body = "";
                 $actionText = $actionTaken;
@@ -147,7 +149,7 @@ try {
                         OD Management System
                     ";
                 }
-                
+
                 sendEmailToHOD($hodEmail, $hodName, $subject, $body, $mentorEmail, $mentorName);
             }
         }
@@ -159,7 +161,7 @@ try {
             FROM od_team_members t
             LEFT JOIN od_applications o ON o.id = t.od_id
             WHERE t.mentor = ?";
-    
+
     $params = [$mentorName];
     $types = "s";
 
@@ -189,9 +191,9 @@ try {
     // --- End of new filter ---
 
     $sql .= " ORDER BY t.od_id DESC, t.id ASC";
-    
+
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param($types, ...$params); 
+    $stmt->bind_param($types, ...$params);
     $stmt->execute();
     $teamMembers = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
@@ -217,6 +219,7 @@ try {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Mentor OD Review Dashboard</title>
@@ -229,18 +232,28 @@ try {
             --light-bg: #f4f7f9;
             --dark-text: #2c3e50;
         }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--light-bg);
             color: var(--dark-text);
         }
-        .container-fluid { max-width: 1400px; }
+
+        .container-fluid {
+            max-width: 1400px;
+        }
+
         .dashboard-header {
             border-bottom: 2px solid #e0e0e0;
             margin-bottom: 20px;
             padding-bottom: 10px;
         }
-        h2 { font-weight: 700; color: var(--primary-color); }
+
+        h2 {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
         .table-card {
             background: #ffffff;
             border-radius: 12px;
@@ -248,6 +261,7 @@ try {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             border: 1px solid #e9ecef;
         }
+
         .table thead th {
             text-align: center;
             vertical-align: middle;
@@ -258,15 +272,18 @@ try {
             letter-spacing: 0.2px;
             padding: 10px 8px;
         }
+
         .table tbody td {
             vertical-align: middle;
             text-align: center;
             padding: 12px 8px;
             font-size: 0.85rem;
         }
+
         .table-hover tbody tr:hover td {
             background-color: #f0f4f7;
         }
+
         .badge {
             font-size: 0.7rem;
             padding: 0.4em 0.8em;
@@ -275,11 +292,28 @@ try {
             min-width: 80px;
             text-transform: uppercase;
         }
-        .badge.bg-pending { background-color: #ffb300 !important; color: #333 !important; }
-        .badge.bg-accepted { background-color: #43a047 !important; }
-        .badge.bg-rejected { background-color: #e53935 !important; }
-        .badge.bg-reviewed { background-color: #03a9f4 !important; }
-        .badge.bg-secondary { background-color: #b0bec5 !important; }
+
+        .badge.bg-pending {
+            background-color: #ffb300 !important;
+            color: #333 !important;
+        }
+
+        .badge.bg-accepted {
+            background-color: #43a047 !important;
+        }
+
+        .badge.bg-rejected {
+            background-color: #e53935 !important;
+        }
+
+        .badge.bg-reviewed {
+            background-color: #03a9f4 !important;
+        }
+
+        .badge.bg-secondary {
+            background-color: #b0bec5 !important;
+        }
+
         .btn-action {
             font-size: 0.75rem;
             padding: 0.3rem 0.7rem;
@@ -288,31 +322,47 @@ try {
             min-width: 80px;
             transition: all 0.2s;
         }
-        .action-form button:not(.btn-confirm) { opacity: 0.8; }
-        .action-form .btn-primary, .action-form .btn-danger { opacity: 1; }
-        .btn-confirm { font-weight: 700;}
+
+        .action-form button:not(.btn-confirm) {
+            opacity: 0.8;
+        }
+
+        .action-form .btn-primary,
+        .action-form .btn-danger {
+            opacity: 1;
+        }
+
+        .btn-confirm {
+            font-weight: 700;
+        }
+
         .modal-header {
             background-color: var(--primary-color);
             color: white;
             border-bottom: none;
         }
+
         .modal-content {
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
+
         .table-mentor-row {
             background-color: #e6f7ff !important;
             font-weight: 600;
             border-left: 3px solid var(--primary-color);
         }
+
         .detail-group {
             text-align: left;
             padding-left: 5px;
         }
+
         .detail-group .small {
             font-size: 0.75rem;
             color: #7f8c8d;
         }
+
         .view-more-btn {
             font-size: 0.8rem;
             color: #1e88e5;
@@ -322,6 +372,7 @@ try {
             text-decoration: underline;
             margin-left: 2px;
         }
+
         .filter-bar {
             background: #fff;
             padding: 15px 20px;
@@ -329,10 +380,13 @@ try {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             margin-bottom: 20px;
         }
-        .filter-bar .form-control, .filter-bar .form-select {
+
+        .filter-bar .form-control,
+        .filter-bar .form-select {
             font-size: 0.9rem;
             border-radius: 6px;
         }
+
         .filter-bar .btn {
             font-weight: 600;
             border-radius: 6px;
@@ -340,12 +394,14 @@ try {
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid py-4">
         <header class="dashboard-header d-flex justify-content-between align-items-center mb-4 pt-3">
             <h2 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Mentor OD Review Dashboard</h2>
             <div class="d-flex align-items-center">
-                <span class="me-3 text-secondary">Logged in as: <span class="fw-bold text-success"><?= htmlspecialchars($mentorName) ?></span></span>
+                <span class="me-3 text-secondary">Logged in as: <span
+                        class="fw-bold text-success"><?= htmlspecialchars($mentorName) ?></span></span>
                 <a href="logout.php" class="btn btn-outline-secondary btn-sm rounded-pill">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </a>
@@ -356,9 +412,9 @@ try {
             <form method="GET" action="" class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label for="search" class="form-label fw-semibold small mb-1">Search by Name or Reg No</label>
-                    <input type="text" class="form-control form-control-sm" id="search" name="search" 
-                           placeholder="Enter student name or register number..." 
-                           value="<?= htmlspecialchars($searchFilter) ?>">
+                    <input type="text" class="form-control form-control-sm" id="search" name="search"
+                        placeholder="Enter student name or register number..."
+                        value="<?= htmlspecialchars($searchFilter) ?>">
                 </div>
                 <div class="col-md-2">
                     <label for="od_type" class="form-label fw-semibold small mb-1">Filter by OD Type</label>
@@ -370,11 +426,12 @@ try {
                 </div>
                 <div class="col-md-3">
                     <label for="month" class="form-label fw-semibold small mb-1">Filter by Month</label>
-                    <input type="month" class="form-control form-control-sm" id="month" name="month" 
-                           value="<?= htmlspecialchars($monthFilter) ?>">
+                    <input type="month" class="form-control form-control-sm" id="month" name="month"
+                        value="<?= htmlspecialchars($monthFilter) ?>">
                 </div>
                 <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel-fill me-1"></i> Filter</button>
+                    <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel-fill me-1"></i>
+                        Filter</button>
                     <a href="?" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-x-lg me-1"></i> Clear</a>
                 </div>
             </form>
@@ -387,7 +444,7 @@ try {
                 <?php else: ?>
                     No OD applications are currently assigned to you for review.
                 <?php endif; ?>
-            </div>  
+            </div>
         <?php else: ?>
             <div class="table-card">
                 <div class="table-responsive">
@@ -410,24 +467,30 @@ try {
                             <?php foreach ($teamMembers as $member): ?>
                                 <tr>
                                     <td><span class="badge bg-secondary"><?= htmlspecialchars($member['od_id']) ?></span></td>
-                                    <td><span class="fw-bold text-start d-block"><?= htmlspecialchars($member['member_name']) ?></span></td>
+                                    <td><span
+                                            class="fw-bold text-start d-block"><?= htmlspecialchars($member['member_name']) ?></span>
+                                    </td>
                                     <td><?= htmlspecialchars($member['member_regno']) ?></td>
                                     <td>
                                         <?= htmlspecialchars($member['member_year']) ?> /
                                         <?= htmlspecialchars($member['member_department']) ?> /
                                         <?= htmlspecialchars($member['member_section']) ?>
                                     </td>
-                                    <td><span class="badge bg-info text-dark"><?= htmlspecialchars(ucfirst($member['od_type'])) ?></span></td>
+                                    <td><span
+                                            class="badge bg-info text-dark"><?= htmlspecialchars(ucfirst($member['od_type'])) ?></span>
+                                    </td>
                                     <td class="small">
                                         <?php
                                         if ($member['od_type'] === 'internal') {
                                             if (!empty($member['from_time']) && !empty($member['to_time'])) {
                                                 echo htmlspecialchars($member['from_date']) . "<br>" .
-                                                     date("h:i A", strtotime($member['from_time'])) . " → " .
-                                                     date("h:i A", strtotime($member['to_time']));
-                                            } elseif (!empty($member['from_date'])) echo htmlspecialchars($member['from_date']);
+                                                    date("h:i A", strtotime($member['from_time'])) . " → " .
+                                                    date("h:i A", strtotime($member['to_time']));
+                                            } elseif (!empty($member['from_date']))
+                                                echo htmlspecialchars($member['from_date']);
                                         } else {
-                                            if (!empty($member['from_date']) && !empty($member['to_date'])) echo htmlspecialchars($member['from_date']) . " → " . htmlspecialchars($member['to_date']);
+                                            if (!empty($member['from_date']) && !empty($member['to_date']))
+                                                echo htmlspecialchars($member['from_date']) . " → " . htmlspecialchars($member['to_date']);
                                         }
                                         ?>
                                     </td>
@@ -440,8 +503,7 @@ try {
                                         <?php else: ?>
                                             <span class="small text-muted">Internal</span>
                                         <?php endif; ?>
-                                        <button type="button" class="view-more-btn"
-                                            data-bs-toggle="modal"
+                                        <button type="button" class="view-more-btn" data-bs-toggle="modal"
                                             data-bs-target="#purposeModal"
                                             data-purpose="<?= htmlspecialchars($member['purpose']) ?>"
                                             data-event="<?= htmlspecialchars($member['event_name'] ?? '') ?>"
@@ -463,12 +525,16 @@ try {
                                     </td>
                                     <td>
                                         <?php if ($member['mentor_status'] === 'Pending'): ?>
-                                            <form method="post" class="d-flex flex-column gap-1 action-form" data-memberid="<?= $member['id'] ?>">
+                                            <form method="post" class="d-flex flex-column gap-1 action-form"
+                                                data-memberid="<?= $member['id'] ?>">
                                                 <input type="hidden" name="member_id" value="<?= $member['id'] ?>">
                                                 <input type="hidden" name="action" value="">
-                                                <button type="button" class="btn btn-outline-success btn-sm btn-action btn-accept">✅ Accept</button>
-                                                <button type="button" class="btn btn-outline-danger btn-sm btn-action btn-reject">❌ Reject</button>
-                                                <button type="submit" class="btn btn-primary btn-sm btn-action btn-confirm d-none">Confirm</button>
+                                                <button type="button" class="btn btn-outline-success btn-sm btn-action btn-accept">✅
+                                                    Accept</button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm btn-action btn-reject">❌
+                                                    Reject</button>
+                                                <button type="submit"
+                                                    class="btn btn-primary btn-sm btn-action btn-confirm d-none">Confirm</button>
                                             </form>
                                         <?php else: ?>
                                             <span class="text-muted small fst-italic">Action Taken</span>
@@ -477,8 +543,8 @@ try {
                                     <td>
                                         <button type="button" class="btn btn-outline-primary btn-sm btn-action view-team-btn"
                                             data-team='<?= json_encode($teamByOD[$member['od_id']] ?? [], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
-                                            data-mentor="<?= htmlspecialchars($mentorName) ?>"
-                                            data-bs-toggle="modal" data-bs-target="#teamModal">
+                                            data-mentor="<?= htmlspecialchars($mentorName) ?>" data-bs-toggle="modal"
+                                            data-bs-target="#teamModal">
                                             <i class="bi bi-people-fill me-1"></i> Team
                                         </button>
                                     </td>
@@ -495,8 +561,10 @@ try {
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="teamModalLabel"><i class="bi bi-people-fill me-2"></i> Team Members & Review Status</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="teamModalLabel"><i class="bi bi-people-fill me-2"></i> Team Members &
+                        Review Status</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="teamModalBody"></div>
             </div>
@@ -507,8 +575,10 @@ try {
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="purposeModalLabel"><i class="bi bi-info-circle me-2"></i> Purpose / Event Details</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="purposeModalLabel"><i class="bi bi-info-circle me-2"></i> Purpose /
+                        Event Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="purposeModalBody"></div>
             </div>
@@ -552,16 +622,16 @@ try {
                 const formData = new FormData(form);
                 form.querySelectorAll('button').forEach(btn => btn.disabled = true);
                 btnConfirm.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`;
-                
+
                 // This existing logic will automatically include the new month filter
                 // because it's part of the page's URL query string (currentUrl.search)
                 const currentUrl = new URL(window.location.href);
-                
-                fetch(currentUrl.pathname + currentUrl.search, { 
+
+                fetch(currentUrl.pathname + currentUrl.search, {
                     method: 'POST',
                     body: formData
                 }).then(res => res.text()).then(() => {
-                    window.location.reload(); 
+                    window.location.reload();
                 }).catch(error => {
                     console.error('Error submitting form:', error);
                     alert('An error occurred during submission. Please try again.');
@@ -613,8 +683,8 @@ try {
             return 'bg-pending';
         }
 
-        document.querySelectorAll('.view-more-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
+        document.querySelectorAll('.view-more-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
                 var purpose = btn.getAttribute('data-purpose');
                 var event = btn.getAttribute('data-event');
                 var college = btn.getAttribute('data-college');
@@ -636,5 +706,7 @@ try {
             });
         });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script></body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
 </html>

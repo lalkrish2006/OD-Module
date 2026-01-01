@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/session_manager.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['hod', 'admin'])) {
     header("Location: login.php?error=unauthorized");
@@ -32,7 +32,7 @@ try {
 
         // Case 1: HOD clicked on application-level Approve/Reject
         if (isset($_POST['od_id']) && !isset($_POST['member_id']) && isset($_POST['action'])) {
-            $od_id = (int)$_POST['od_id'];
+            $od_id = (int) $_POST['od_id'];
             $hodAction = $_POST['action']; // 'accept' or 'reject'
             $hodStatus = $hodAction === 'accept' ? "HOD Accepted" : "HOD Rejected";
 
@@ -41,12 +41,12 @@ try {
             $stmt->bind_param("si", $hodStatus, $od_id);
             $stmt->execute();
             $stmt->close();
-            
+
             // --- 🚀 NEW LOGIC FOR TECHNICIAN EMAIL NOTIFICATION (WITH DEBUGGING) ---
-            
+
             // Condition 1: Check if HOD accepted
             if ($hodAction === 'accept') {
-                
+
                 // var_dump("DEBUG: Condition 1 MET. HOD action is 'accept'.");
 
                 // Fetch app details to check other conditions
@@ -60,7 +60,7 @@ try {
                     // var_dump("DEBUG: Found application details:", $appDetails);
 
                     $odType = $appDetails['od_type'];
-                    $labRequired = (int)($appDetails['lab_required'] ?? 0); 
+                    $labRequired = (int) ($appDetails['lab_required'] ?? 0);
                     $appDepartment = $appDetails['department'];
 
                     // var_dump("DEBUG: Checking Condition 2 (od_type): " . $odType);
@@ -69,7 +69,7 @@ try {
                     // Condition 2: od_type is 'Internal'
                     // Condition 3: lab_required is 1 (ticked)
                     if (strtolower($odType) === 'internal' && $labRequired === 1) {
-                        
+
                         // var_dump("DEBUG: Conditions 2 & 3 MET. Finding technician for department: " . $appDepartment);
 
                         // All conditions met. Find the technician for this department
@@ -94,11 +94,11 @@ try {
 
                         // Send the email
                         if ($techEmail && $hodEmail) {
-                            
+
                             // var_dump("DEBUG: ALL CONDITIONS MET. Attempting to send email...");
-                            
-                            require_once 'phpMailer.php'; 
-                            
+
+                            require_once 'phpMailer.php';
+
                             $subject = "Lab Booking Required for Internal OD (ID: $od_id)";
                             $body = "
                                 Dear $techName,<br><br>
@@ -108,7 +108,7 @@ try {
                                 Regards,<br>
                                 OD Management System
                             ";
-                            
+
                             sendEmailToHOD($techEmail, $techName, $subject, $body, $hodEmail, $hodName);
 
                             // var_dump("DEBUG: Mail function called. Check your technician's inbox and your PHP error log.");
@@ -128,7 +128,7 @@ try {
 
             // We must stop the script to see the output
             // die(" --- END OF DEBUGGING --- ");
-            
+
             // --- END OF NEW LOGIC ---
 
         }
@@ -138,7 +138,7 @@ try {
             $member_id = (int) $_POST['member_id'];
             $od_id = (int) $_POST['od_id'];
             // Use HOD status prefixes to be clear
-            $hodStatus = $_POST['action'] === 'accept' ? "HOD Accepted" : "HOD Rejected"; 
+            $hodStatus = $_POST['action'] === 'accept' ? "HOD Accepted" : "HOD Rejected";
 
             $sqlUpdate = "UPDATE od_team_members SET mentor_status=? WHERE id=?";
             $stmt = $conn->prepare($sqlUpdate);
@@ -176,7 +176,7 @@ try {
         array_push($params, $like, $like, $like, $like, $like, $like, $like, $like, $like, $like, $like, $like, $like);
         $types .= str_repeat('s', 13);
     }
-    
+
     // --- NEW: Add month filter logic ---
     if (!empty($monthFilter)) {
         // Filter by the month of the 'from_date'
@@ -219,10 +219,10 @@ try {
             ORDER BY o.id DESC";
 
     $stmt = $conn->prepare($sql);
-    
+
     // --- NEW: Dynamic bind_param ---
-    $stmt->bind_param($types, ...$params); 
-    
+    $stmt->bind_param($types, ...$params);
+
     $stmt->execute();
     $applications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
@@ -266,7 +266,8 @@ try {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
-            --primary-color: #0d6efd; /* Bootstrap Blue */
+            --primary-color: #0d6efd;
+            /* Bootstrap Blue */
             --danger-color: #dc3545;
             --success-color: #198754;
             --info-color: #0dcaf0;
@@ -296,10 +297,11 @@ try {
             color: var(--primary-color);
             font-weight: 700;
         }
-        
+
         .user-info {
             font-size: 0.9rem;
         }
+
         .user-info .fw-bold {
             color: var(--success-color);
         }
@@ -309,24 +311,27 @@ try {
             border-radius: 0.75rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
-        
+
         /* --- NEW: Filter Bar Styles --- */
         .filter-bar-card .form-label {
             font-size: 0.75rem;
             font-weight: 600;
             color: var(--secondary-color);
         }
+
         .filter-bar-card .form-control,
         .filter-bar-card .form-select {
             font-size: 0.9rem;
             border-radius: 6px;
         }
+
         .filter-bar-card .btn-sm {
             font-weight: 600;
             border-radius: 6px;
             font-size: 0.9rem;
             padding: 0.375rem 0.75rem;
         }
+
         /* --- End Filter Bar Styles --- */
 
         .table-card {
@@ -358,7 +363,7 @@ try {
         .table-hover tbody tr:hover {
             background-color: #f1f7ff;
         }
-        
+
         .table td.detail-group {
             text-align: left;
             white-space: normal;
@@ -372,13 +377,14 @@ try {
             font-weight: 600;
         }
 
-        .btn-sm, .btn-group-sm > .btn {
+        .btn-sm,
+        .btn-group-sm>.btn {
             font-size: 0.75rem;
             padding: 0.2rem 0.6rem;
             border-radius: 50rem;
             font-weight: 600;
         }
-        
+
         .action-form .btn {
             width: 100%;
         }
@@ -388,13 +394,14 @@ try {
             color: white;
             border-bottom: none;
         }
-        
+
         .modal-content {
-             border-radius: 0.75rem;
-             border:none;
+            border-radius: 0.75rem;
+            border: none;
         }
-        
-        .table-sm th, .table-sm td {
+
+        .table-sm th,
+        .table-sm td {
             font-size: 0.8rem;
             padding: 0.5rem;
         }
@@ -403,18 +410,19 @@ try {
 
 <body>
     <div class="container-fluid py-4">
-        
+
         <header class="dashboard-header d-flex justify-content-between align-items-center">
-            <h2 class="mb-0"><i class="bi bi-person-video3 me-2"></i> HOD Dashboard (<?= htmlspecialchars($hodDept) ?>)</h2>
+            <h2 class="mb-0"><i class="bi bi-person-video3 me-2"></i> HOD Dashboard (<?= htmlspecialchars($hodDept) ?>)
+            </h2>
             <div class="dashboard-header-actions">
                 <a href="Edit-UserData.php" class="btn btn-primary">
                     ✏️ Edit User Data
                 </a>
             </div>
-            
+
             <div class="d-flex align-items-center">
-                 <span class="text-secondary me-3 user-info">
-                    Logged in as: 
+                <span class="text-secondary me-3 user-info">
+                    Logged in as:
                     <span class="fw-bold text-dark"><?= strtoupper($_SESSION['role']) ?></span>
                 </span>
                 <a href="logout.php" class="btn btn-outline-secondary btn-sm rounded-pill">
@@ -428,20 +436,22 @@ try {
                 <form method="GET" action="" class="row g-3 align-items-end">
                     <div class="col-md-7">
                         <label for="search" class="form-label">Search by ID, Name, Reg No, etc.</label>
-                        <input type="text" class="form-control form-control-sm" id="search" name="search" 
-                               placeholder="Enter student name, register number, purpose..." 
-                               value="<?= htmlspecialchars($search) ?>">
+                        <input type="text" class="form-control form-control-sm" id="search" name="search"
+                            placeholder="Enter student name, register number, purpose..."
+                            value="<?= htmlspecialchars($search) ?>">
                     </div>
                     <div class="col-md-3">
                         <label for="month" class="form-label">Filter by Month</label>
-                        <input type="month" class="form-control form-control-sm" id="month" name="month" 
-                               value="<?= htmlspecialchars($monthFilter) ?>">
+                        <input type="month" class="form-control form-control-sm" id="month" name="month"
+                            value="<?= htmlspecialchars($monthFilter) ?>">
                     </div>
                     <div class="col-md-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel-fill me-1"></i> Filter</button>
-                        <a href="?<?php if ($_SESSION['role'] === 'admin') echo 'department=' . urlencode($hodDept); ?>" 
-                           class="btn btn-outline-secondary btn-sm w-100">
-                           <i class="bi bi-x-lg me-1"></i> Clear
+                        <button type="submit" class="btn btn-primary btn-sm w-100"><i
+                                class="bi bi-funnel-fill me-1"></i> Filter</button>
+                        <a href="?<?php if ($_SESSION['role'] === 'admin')
+                            echo 'department=' . urlencode($hodDept); ?>"
+                            class="btn btn-outline-secondary btn-sm w-100">
+                            <i class="bi bi-x-lg me-1"></i> Clear
                         </a>
                     </div>
                     <?php if ($_SESSION['role'] === 'admin'): ?>
@@ -455,7 +465,7 @@ try {
                 <i class="bi bi-info-circle me-2"></i> No OD requests are currently pending your approval.
             </div>
         <?php elseif (empty($applications)): ?>
-             <div class="alert alert-warning shadow-sm">
+            <div class="alert alert-warning shadow-sm">
                 <i class="bi bi-search me-2"></i> No applications found matching your filter criteria.
             </div>
         <?php else: ?>
@@ -488,7 +498,8 @@ try {
                                     <td><?= htmlspecialchars($app['department']) ?></td>
                                     <td><?= htmlspecialchars($app['section']) ?></td>
                                     <td>
-                                        <span class="badge bg-<?= $app['od_type'] === 'Internal' ? 'info text-dark' : 'primary' ?>">
+                                        <span
+                                            class="badge bg-<?= $app['od_type'] === 'Internal' ? 'info text-dark' : 'primary' ?>">
                                             <?= htmlspecialchars(ucfirst($app['od_type'])) ?>
                                         </span>
                                     </td>
@@ -506,7 +517,7 @@ try {
                                         <?php if ($app['college_name']): ?>
                                             <div class="small text-muted">
                                                 <i class="bi bi-building me-1"></i>
-                                                <?= htmlspecialchars($app['college_name']) ?> 
+                                                <?= htmlspecialchars($app['college_name']) ?>
                                                 (<?= htmlspecialchars($app['event_name']) ?>)
                                             </div>
                                         <?php else: ?>
@@ -517,9 +528,12 @@ try {
                                         <?php
                                         $status = $app['status'];
                                         $badgeClass = 'secondary';
-                                        if (str_contains($status, 'Accepted')) $badgeClass = 'success';
-                                        elseif (str_contains($status, 'Rejected')) $badgeClass = 'danger';
-                                        elseif (str_contains($status, 'Reviewed')) $badgeClass = 'info text-dark';
+                                        if (str_contains($status, 'Accepted'))
+                                            $badgeClass = 'success';
+                                        elseif (str_contains($status, 'Rejected'))
+                                            $badgeClass = 'danger';
+                                        elseif (str_contains($status, 'Reviewed'))
+                                            $badgeClass = 'info text-dark';
                                         ?>
                                         <span class="badge bg-<?= $badgeClass ?> status-badge">
                                             <?= htmlspecialchars($status) ?>
@@ -541,12 +555,16 @@ try {
                                             <form method="post" class="d-flex flex-column gap-1 action-form">
                                                 <input type="hidden" name="od_id" value="<?= $app['id'] ?>">
                                                 <input type="hidden" name="action" value="">
-                                                <button type="button" class="btn btn-success btn-sm btn-accept"><i class="bi bi-check-circle me-1"></i> Approve</button>
-                                                <button type="button" class="btn btn-danger btn-sm btn-reject"><i class="bi bi-x-circle me-1"></i> Reject</button>
-                                                <button type="submit" class="btn btn-primary btn-sm btn-confirm d-none">Confirm</button>
+                                                <button type="button" class="btn btn-success btn-sm btn-accept"><i
+                                                        class="bi bi-check-circle me-1"></i> Approve</button>
+                                                <button type="button" class="btn btn-danger btn-sm btn-reject"><i
+                                                        class="bi bi-x-circle me-1"></i> Reject</button>
+                                                <button type="submit"
+                                                    class="btn btn-primary btn-sm btn-confirm d-none">Confirm</button>
                                             </form>
                                         <?php else: ?>
-                                            <span class="badge bg-<?= str_contains($app['status'], 'Accepted') ? 'success' : 'danger' ?>">
+                                            <span
+                                                class="badge bg-<?= str_contains($app['status'], 'Accepted') ? 'success' : 'danger' ?>">
                                                 Action Taken
                                             </span>
                                         <?php endif; ?>
@@ -568,7 +586,7 @@ try {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="teamModalBody">
-                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -584,7 +602,7 @@ try {
                 });
                 // Activate clicked button
                 e.target.classList.add('active');
-                
+
                 const hiddenAction = form.querySelector('input[name="action"]');
                 hiddenAction.value = e.target.classList.contains('btn-accept') ? 'accept' : 'reject';
                 form.querySelector('.btn-confirm').classList.remove('d-none');
@@ -597,7 +615,7 @@ try {
                 e.preventDefault();
                 const form = e.target;
                 const formData = new FormData(form);
-                
+
                 // Keep filter query params on reload
                 const postUrl = new URL(window.location.href);
                 postUrl.searchParams.delete('ajax'); // Not an ajax load
@@ -605,19 +623,19 @@ try {
                 fetch(postUrl.href, { // Post to the same URL (which includes filters)
                     method: 'POST',
                     body: formData
-                }).then(response => response.text()) 
-                .then(text => {
-                    // This is your debug logic - it's preserved
-                    if (text.includes('DEBUG:')) {
-                        document.body.innerHTML = '<pre>' + text.replace(/<pre>|<\/pre>/g, '') + '</pre>';
-                    } else {
-                        // Normal flow: reload the page to show the changes
-                        window.location.reload();
-                    }
-                }).catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred. Check the console.');
-                });
+                }).then(response => response.text())
+                    .then(text => {
+                        // This is your debug logic - it's preserved
+                        if (text.includes('DEBUG:')) {
+                            document.body.innerHTML = '<pre>' + text.replace(/<pre>|<\/pre>/g, '') + '</pre>';
+                        } else {
+                            // Normal flow: reload the page to show the changes
+                            window.location.reload();
+                        }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred. Check the console.');
+                    });
             }
         });
 
@@ -631,10 +649,10 @@ try {
                     <thead class="table-light">
                         <tr><th>Name</th><th>Reg No</th><th>Year</th><th>Dept</th><th>Sec</th><th>Mentor</th><th>Status</th></tr>
                     </thead><tbody>`;
-                
+
                 teamData.forEach(m => {
                     let statusCell = '';
-                    
+
                     // Show override buttons only if mentor rejected
                     if (m.mentor_status === 'Rejected') {
                         statusCell = `
@@ -652,7 +670,7 @@ try {
                         let badgeClass = 'secondary';
                         if (status.includes('Accepted')) badgeClass = 'success';
                         else if (status.includes('Rejected')) badgeClass = 'danger';
-                        
+
                         statusCell = `<span class="badge bg-${badgeClass}">${status}</span>`;
                     }
 
@@ -676,7 +694,7 @@ try {
         document.addEventListener('click', e => {
             if (e.target.classList.contains('btn-hod-accept') || e.target.classList.contains('btn-hod-reject')) {
                 const form = e.target.closest('.hod-member-form');
-                 // Reset other buttons
+                // Reset other buttons
                 form.querySelectorAll('.btn-hod-accept, .btn-hod-reject').forEach(btn => {
                     btn.classList.remove('active');
                 });
